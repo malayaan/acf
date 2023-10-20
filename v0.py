@@ -8,50 +8,45 @@ data_matrix_updated = np.array([
     [0, 0, 10]
 ])
 
-# Calculer la matrice des profils (fréquences relatives)
-total_updated = np.sum(data_matrix_updated)
-profiles_updated = data_matrix_updated / total_updated
+# Calcul des fréquences jointes (f_ij)
+total = np.sum(data_matrix_updated)
+f_ij = data_matrix_updated / total
 
-# Calculer la matrice de Burt
-n, m = profiles_updated.shape
-burt_matrix = np.zeros((m, m))
-for j in range(m):
-    for j_prime in range(m):
-        for i in range(n):
-            burt_matrix[j, j_prime] += profiles_updated[i, j] * profiles_updated[i, j_prime] / (np.sum(profiles_updated[i, :]) * np.sum(profiles_updated[:, j_prime]))
+# Calcul des fréquences marginales des lignes (f_i.)
+f_i = np.sum(f_ij, axis=1)
 
-# Centrer la matrice de Burt
-column_means_burt = np.mean(burt_matrix, axis=0, keepdims=True)
-overall_mean_burt = np.mean(burt_matrix)
-centered_burt_matrix = burt_matrix - column_means_burt - column_means_burt.T + overall_mean_burt
+# Calcul des fréquences marginales des colonnes (f_.j)
+f_j = np.sum(f_ij, axis=0)
 
-# Calculer les vecteurs propres et les valeurs propres de la matrice de covariance
-eigenvalues_burt, eigenvectors_burt = np.linalg.eig(centered_burt_matrix)
-sorted_indices_burt = np.argsort(eigenvalues_burt)[::-1]
-eigenvalues_burt = eigenvalues_burt[sorted_indices_burt]
-eigenvectors_burt = eigenvectors_burt[:, sorted_indices_burt]
+# Profil par ligne (FF)
+FF = f_ij / f_i[:, np.newaxis]
 
-# Projeter les données dans l'espace des deux premiers vecteurs propres
-factor_scores_burt = np.dot(centered_burt_matrix, eigenvectors_burt[:, :2])
+# Matrices diagonales
+D_n = np.diag(f_i)
+D_n_1 = np.diag(1 / f_i)
+Fprim = FF.T
+D_p = np.diag(f_j)
+D_p_1 = np.diag(1 / f_j)
 
-# Calculer les marges à nouveau
-row_sums = np.sum(data_matrix_updated, axis=1)
-column_sums = np.sum(data_matrix_updated, axis=0)
+# Calcul de FD_n_1
+FD_n_1 = np.dot(D_n_1, FF)
 
-# Calculer la matrice des données attendues
-expected_data_matrix = np.outer(row_sums, column_sums) / np.sum(data_matrix_updated)
 
-# Affichage
-plt.figure(figsize=(10, 8))
-unique_perceived_flavors = ['Perçu acide', 'Perçu amer', 'Perçu sucré']
-for j, perceived_flavor in enumerate(unique_perceived_flavors):
-    plt.scatter(factor_scores_burt[j, 0], factor_scores_burt[j, 1], label=perceived_flavor, s=100)
-    plt.annotate(perceived_flavor, (factor_scores_burt[j, 0], factor_scores_burt[j, 1]), fontsize=12)
-plt.axhline(0, color='grey', linewidth=0.5)
-plt.axvline(0, color='grey', linewidth=0.5)
-plt.title('Analyse des Correspondances Multiples (ACM) en utilisant la matrice de Burt')
-plt.xlabel('Première dimension')
-plt.ylabel('Deuxième dimension')
-plt.legend()
-plt.grid(True)
-plt.show()
+# Calcul de A_at
+A_at = np.dot(Fprim, np.dot(D_n_1, FF))
+
+
+# Calcul de L1
+L1 = np.diag(f_j**(-0.5))
+
+# Calcul de A
+A = np.dot(L1, np.dot(A_at, L1))
+
+# Calcul de S
+D_p_half_inv = np.diag(1 / np.sqrt(f_j))
+S = np.dot(A_at, np.dot(D_p_half_inv, D_p_half_inv))
+
+# Calcul des valeurs propres et vecteurs propres
+eigen_results_A = np.linalg.eig(A)
+eigen_results_S = np.linalg.eig(S)
+print(eigen_results_A,"####", eigen_results_S)

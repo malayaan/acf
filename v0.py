@@ -3,12 +3,58 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+def read_data_from_file(file_name):
+    """Lire les données du fichier."""
+    with open(file_name, 'r') as file:
+        lines = file.readlines()[1:]
+        return [line.strip().split(', ') for line in lines]
+
+def create_contingency_table(data):
+    """Créer la table de contingence."""
+    unique_values_1 = sorted(list(set([pair[0] for pair in data])))
+    unique_values_2 = sorted(list(set([pair[1] for pair in data])))
+
+    table = np.zeros((len(unique_values_1), len(unique_values_2)))
+    for pair in data:
+        i = unique_values_1.index(pair[0])
+        j = unique_values_2.index(pair[1])
+        table[i, j] += 1
+
+    return table, unique_values_1, unique_values_2
+
+
+# Lire le fichier Excel
+excel_data = pd.read_excel('TP_AFC_majeur1718_travail (1).xlsx')
+
+# Extraire les colonnes " temps travail" et "Qualite vie" avec les noms corrects
+extracted_data_excel = excel_data[[" temps travail", "Qualite vie"]].dropna().values.tolist()
+
+# Créer la table de contingence pour " temps travail" et "Qualite vie"
+contingency_table_excel, row_labels_excel, column_labels_excel = create_contingency_table(extracted_data_excel)
+
+# Convertir la table de contingence en DataFrame pour une meilleure visualisation
+table_contingence = pd.DataFrame(contingency_table_excel, index=row_labels_excel, columns=column_labels_excel)
+"""
+
+# Lire les données du fichier
+data = read_data_from_file('sondage.txt')
+
+# Créer la table de contingence
+contingency_table, row_labels, column_labels = create_contingency_table(data)
+
+# Convertir la table de contingence en DataFrame pour une meilleure visualisation
+table_contingence= pd.DataFrame(contingency_table, index=row_labels, columns=column_labels)
+
+print(table_contingence)
+
 # Table de contingence donnée
 table_contingence = pd.DataFrame({
-    'Perçu sucré': [10, 0, 0],
-    'Perçu acide': [0, 10, 0],
-    'Perçu amer': [0, 0, 10]
-}, index=['sucré', 'acide', 'amer'])
+    'acide': [8, 2, 0],
+    'amer': [4, 6, 0],
+    'sucré': [0,0,10]
+}, index=['percu acide','percu amer','percu sucré'])
+"""
+
 
 # Calcul de la matrice des profils FF
 total = table_contingence.values.sum()
@@ -31,9 +77,6 @@ D_p = np.diag(f_j)
 # Calcul de D_p_1 : matrice diagonale inverse des fréquences marginales des colonnes
 D_p_1 = np.diag(1/f_j)
 
-# Calcul de FD_n_1
-FD_n_1 = np.dot(D_n_1, F)
-
 # Calcul de A_at : la matrice d'inertie
 A_at = np.dot(Fprim, np.dot(D_n_1, F))
 
@@ -54,20 +97,20 @@ plus_grandes_valeurs = valeurs_propres[indices]
 plus_grands_vecteurs = np.array([vecteurs_propres[indices[0]],vecteurs_propres[indices[1]]])
 
 # Calcul des vecteurs propres de S et T
-u = np.dot(D_n_1, plus_grands_vecteurs.T).T
-v = np.zeros((2, A.shape[0]))
+u = np.dot(np.diag(f_j**(1/2)), plus_grands_vecteurs.T).T
+print(u)
+v = np.zeros((2, F.shape[0]))
 for alpha in range(2):
-    u_alpha = u[alpha]
     lambda_alpha = plus_grandes_valeurs[alpha]
-    v[alpha] = (1 / np.sqrt(lambda_alpha)) * np.dot(F, np.dot(D_p_1, u_alpha))
+    v[alpha] = (1 / np.sqrt(lambda_alpha)) * np.dot(F, np.dot(D_p_1, u[alpha]))
 
 # Calcul des coordonnées factorielles pour le profil des lignes et le profil des colonnes
-psi = np.zeros((2, A.shape[0]))
-phi = np.zeros((2, A.shape[0]))
-
+psi = np.zeros((2, F.shape[0]))
+phi = np.zeros((2, F.shape[1]))
 for alpha in range(2):
-    psi[alpha] = np.dot(D_n_1, np.dot(F, np.dot(D_p_1, u[alpha])))
-    phi[alpha] = np.dot(D_p_1, np.dot(F, np.dot(D_n_1, v[alpha])))
+    lambda_alpha = plus_grandes_valeurs[alpha]
+    psi[alpha] = np.sqrt(lambda_alpha) *np.dot(D_n_1, v[alpha])
+    phi[alpha] = np.sqrt(lambda_alpha) *np.dot(D_p_1, u[alpha])
 
 # Tracer les résultats avec les coordonnées factorielles
 fig, ax = plt.subplots(figsize=(10, 8))

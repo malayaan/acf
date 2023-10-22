@@ -1,52 +1,79 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
-# Données : table de contingence
-data_matrix_updated = np.array([
-    [10, 0, 0],
-    [0, 10, 0],
-    [0, 0, 10]
-])
+# Table de contingence donnée
+table_contingence = pd.DataFrame({
+    'Perçu acide': [10, 0, 0],
+    'Perçu amer': [0, 9, 1],
+    'Perçu sucré': [0, 3, 7]
+}, index=['acide', 'amer', 'sucré'])
 
-# Calcul des fréquences jointes (f_ij)
-total = np.sum(data_matrix_updated)
-f_ij = data_matrix_updated / total
+# Calcul de la matrice des profils FF
+total = table_contingence.values.sum()
+profil_ij = table_contingence / total
 
-# Calcul des fréquences marginales des lignes (f_i.)
-f_i = np.sum(f_ij, axis=1)
-
-# Calcul des fréquences marginales des colonnes (f_.j)
-f_j = np.sum(f_ij, axis=0)
-
-# Profil par ligne (FF)
-FF = f_ij / f_i[:, np.newaxis]
-
-# Matrices diagonales
+# Calcul de D_n : matrice diagonale des fréquences marginales des lignes
+f_i = table_contingence.sum(axis=1) / total
 D_n = np.diag(f_i)
-D_n_1 = np.diag(1 / f_i)
-Fprim = FF.T
+
+# Calcul de D_n_1 : matrice diagonale inverse des fréquences marginales des lignes
+D_n_1 = np.diag(1/f_i)
+
+# Calcul de Fprim : transposition de la matrice des profils
+Fprim = profil_ij.T
+
+# Calcul de D_p : matrice diagonale des fréquences marginales des colonnes
+f_j = table_contingence.sum(axis=0) / total
 D_p = np.diag(f_j)
-D_p_1 = np.diag(1 / f_j)
+
+# Calcul de D_p_1 : matrice diagonale inverse des fréquences marginales des colonnes
+D_p_1 = np.diag(1/f_j)
 
 # Calcul de FD_n_1
-FD_n_1 = np.dot(D_n_1, FF)
+FD_n_1 = np.dot(D_n_1, profil_ij)
 
-
-# Calcul de A_at
-A_at = np.dot(Fprim, np.dot(D_n_1, FF))
-
+# Calcul de A_at : la matrice d'inertie
+A_at = np.dot(Fprim, np.dot(D_n_1, profil_ij))
 
 # Calcul de L1
-L1 = np.diag(f_j**(-0.5))
+L1 = np.diag(f_j**(-1/2))
 
-# Calcul de A
+# Calcul de A : matrice d'inertie transformée
 A = np.dot(L1, np.dot(A_at, L1))
 
-# Calcul de S
-D_p_half_inv = np.diag(1 / np.sqrt(f_j))
-S = np.dot(A_at, np.dot(D_p_half_inv, D_p_half_inv))
+# Calcul des valeurs propres et décomposition en valeurs singulières de A
+valeurs_propres = np.linalg.eigvals(A)
+u, s, vh = np.linalg.svd(A)
 
-# Calcul des valeurs propres et vecteurs propres
-eigen_results_A = np.linalg.eig(A)
-eigen_results_S = np.linalg.eig(S)
-print(eigen_results_A,"####", eigen_results_S)
+# Trier les valeurs propres et obtenir les indices pour les deux plus grandes
+indices = np.argsort(valeurs_propres)[::-1][:2]
+
+# Sélection des deux plus grandes valeurs propres et des vecteurs propres associés de la matrice vh
+plus_grandes_valeurs = valeurs_propres[indices]
+plus_grands_vecteurs = vh[indices, :]
+
+# Calcul des coordonnées des lignes et des colonnes dans l'espace factoriel
+coordonnees_lignes = np.dot(FD_n_1, plus_grands_vecteurs.T)
+coordonnees_colonnes = np.dot(profil_ij.T, np.dot(D_n_1, plus_grands_vecteurs.T))
+
+# Tracer les résultats
+fig, ax = plt.subplots(figsize=(10, 8))
+
+# Tracer les points de ligne (Vraie-Saveur)
+for i, etiquette in enumerate(table_contingence.index):
+    ax.scatter(coordonnees_lignes[i, 0], coordonnees_lignes[i, 1], marker='o', color='r', s=100)
+    ax.text(coordonnees_lignes[i, 0] + 0.05, coordonnees_lignes[i, 1] + 0.05, etiquette, fontsize=12)
+
+# Tracer les points de colonne (Saveur-Perçue)
+for i, etiquette in enumerate(table_contingence.columns):
+    ax.scatter(coordonnees_colonnes[i, 0], coordonnees_colonnes[i, 1], marker='s', color='b', s=100)
+    ax.text(coordonnees_colonnes[i, 0] + 0.05, coordonnees_colonnes[i, 1] + 0.05, etiquette, fontsize=12)
+
+ax.axhline(0, color='grey', linestyle='--')
+ax.axvline(0, color='grey', linestyle='--')
+ax.set_title("Plan des Valeurs Propres (AFC)")
+ax.set_xlabel("Dimension 1")
+ax.set_ylabel("Dimension 2")
+
+plt.show()

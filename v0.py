@@ -50,11 +50,10 @@ print(table_contingence)
 """
 # Table de contingence donnée
 table_contingence = pd.DataFrame({
-    'percu acide': [10, 0, 0],
-    'percu amer': [0, 10, 0],
+    'percu acide': [9, 3, 0],
+    'percu amer': [1, 7, 0],
     'percu sucré': [0,0,10]
 }, index=['acide','amer','sucré'])
-
 
 
 # Calcul de la matrice des profils FF
@@ -81,25 +80,31 @@ D_p_1 = np.diag(1/f_j)
 # Calcul de A_at : la matrice d'inertie
 A_at = np.dot(Fprim, np.dot(D_n_1, F))
 
-# Calcul de L1
-L1 = np.diag(f_j**(-1/2))
-
 # Calcul de A : matrice d'inertie transformée
-A = np.dot(L1, np.dot(A_at, L1))
+A = np.dot(np.diag(f_j**(-1/2)), np.dot(A_at, np.diag(f_j**(-1/2))))
 
 # Calcul des valeurs propres et décomposition en valeurs singulières de A
 valeurs_propres, vecteurs_propres = np.linalg.eig(A)
 
 # Trier les valeurs propres et obtenir les indices pour les deux plus grandes
-indices = np.argsort(valeurs_propres)[::-1][:2]
+#indices = np.argsort(valeurs_propres)[::-1][:2]
+
+# Éliminer les doublons et trier les valeurs propres
+valeurs_propres_uniques = np.unique(valeurs_propres)
+indices_uniques = np.argsort(valeurs_propres_uniques)[::-1]
+
+# Obtenir les indices pour les deux plus grandes valeurs propres distinctes
+indices = indices_uniques[:2]
 
 # Sélection des deux plus grandes valeurs propres et des vecteurs propres associés
 plus_grandes_valeurs = valeurs_propres[indices]
 plus_grands_vecteurs = np.array([vecteurs_propres[indices[0]],vecteurs_propres[indices[1]]])
+print(A)
+print(vecteurs_propres)
+print(valeurs_propres)
 
 # Calcul des vecteurs propres de S et T
 u = np.dot(np.diag(f_j**(1/2)), plus_grands_vecteurs.T).T
-print(u)
 v = np.zeros((2, F.shape[0]))
 for alpha in range(2):
     lambda_alpha = plus_grandes_valeurs[alpha]
@@ -140,4 +145,4 @@ ax.legend()
 
 # Montrer le graphique
 plt.tight_layout()
-plt.show()
+#plt.show()

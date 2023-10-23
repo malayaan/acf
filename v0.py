@@ -34,8 +34,8 @@ contingency_table_excel, row_labels_excel, column_labels_excel = create_continge
 
 # Convertir la table de contingence en DataFrame pour une meilleure visualisation
 table_contingence = pd.DataFrame(contingency_table_excel, index=row_labels_excel, columns=column_labels_excel)
-"""
-"""
+
+
 # Lire les données du fichier
 data = read_data_from_file('sondage.txt')
 
@@ -50,8 +50,8 @@ print(table_contingence)
 """
 # Table de contingence donnée
 table_contingence = pd.DataFrame({
-    'percu acide': [9, 3, 0],
-    'percu amer': [1, 7, 0],
+    'percu acide': [10, 0, 0],
+    'percu amer': [0, 10, 0],
     'percu sucré': [0,0,10]
 }, index=['acide','amer','sucré'])
 
@@ -85,39 +85,51 @@ A = np.dot(np.diag(f_j**(-1/2)), np.dot(A_at, np.diag(f_j**(-1/2))))
 
 # Calcul des valeurs propres et décomposition en valeurs singulières de A
 valeurs_propres, vecteurs_propres = np.linalg.eig(A)
-
+print(valeurs_propres)
 # Trier les valeurs propres et obtenir les indices pour les deux plus grandes
-#indices = np.argsort(valeurs_propres)[::-1][:2]
+indices = np.argsort(valeurs_propres)[::-1][:2]
 
 # Éliminer les doublons et trier les valeurs propres
 valeurs_propres_uniques = np.unique(valeurs_propres)
 indices_uniques = np.argsort(valeurs_propres_uniques)[::-1]
 
 # Obtenir les indices pour les deux plus grandes valeurs propres distinctes
-indices = indices_uniques[:2]
+#indices = indices_uniques[:2]
 
 # Sélection des deux plus grandes valeurs propres et des vecteurs propres associés
 plus_grandes_valeurs = valeurs_propres[indices]
 plus_grands_vecteurs = np.array([vecteurs_propres[indices[0]],vecteurs_propres[indices[1]]])
-print(A)
-print(vecteurs_propres)
-print(valeurs_propres)
+
+#calcul de T
+T=np.dot(F,np.dot(D_p_1,np.dot(F.T,D_n_1)))
+valeurs_propres_T, vecteurs_propres_T = np.linalg.eig(A)
+indices_T = np.argsort(valeurs_propres)[::-1][:2]
+plus_grandes_valeurs_T = valeurs_propres_T[indices_T]
+plus_grands_vecteurs_T = np.array([vecteurs_propres_T[indices_T[0]],vecteurs_propres_T[indices_T[1]]])
 
 # Calcul des vecteurs propres de S et T
 u = np.dot(np.diag(f_j**(1/2)), plus_grands_vecteurs.T).T
-v = np.zeros((2, F.shape[0]))
-for alpha in range(2):
-    lambda_alpha = plus_grandes_valeurs[alpha]
-    v[alpha] = (1 / np.sqrt(lambda_alpha)) * np.dot(F, np.dot(D_p_1, u[alpha]))
+v = plus_grands_vecteurs_T
+#v = np.zeros((2, F.shape[0]))
+#for alpha in range(2):
+#    lambda_alpha = plus_grandes_valeurs[alpha]
+#    v[alpha] = (1 / np.sqrt(lambda_alpha)) * np.dot(F, np.dot(D_p_1, u[alpha]))
+
 
 # Calcul des coordonnées factorielles pour le profil des lignes et le profil des colonnes
 psi = np.zeros((2, F.shape[0]))
 phi = np.zeros((2, F.shape[1]))
+psitest = np.zeros((2, F.shape[0]))
+phitest = np.zeros((2, F.shape[1]))
 for alpha in range(2):
     lambda_alpha = plus_grandes_valeurs[alpha]
     psi[alpha] = np.sqrt(lambda_alpha) *np.dot(D_n_1, v[alpha])
-    phi[alpha] = np.sqrt(lambda_alpha) *np.dot(D_p_1, u[alpha])
+    phi[alpha] = np.sqrt(lambda_alpha) *np.dot(D_p_1, u[alpha])  
+    psitest[alpha] = np.dot(D_n_1, np.dot(F,np.dot(D_p_1,u[alpha])))
+    phitest[alpha] = np.dot(D_p_1, np.dot(F.T,np.dot(D_n_1,v[alpha])))
 
+phi=phitest
+psi=psi
 # Tracer les résultats avec les coordonnées factorielles
 fig, ax = plt.subplots(figsize=(10, 8))
 
@@ -145,4 +157,4 @@ ax.legend()
 
 # Montrer le graphique
 plt.tight_layout()
-#plt.show()
+plt.show()

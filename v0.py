@@ -22,7 +22,7 @@ def create_contingency_table(data):
 
     return table, unique_values_1, unique_values_2
 
-
+"""
 # Lire le fichier Excel
 excel_data = pd.read_excel('TP_AFC_majeur1718_travail (1).xlsx')
 
@@ -35,7 +35,7 @@ contingency_table_excel, row_labels_excel, column_labels_excel = create_continge
 # Convertir la table de contingence en DataFrame pour une meilleure visualisation
 table_contingence = pd.DataFrame(contingency_table_excel, index=row_labels_excel, columns=column_labels_excel)
 """
-
+"""
 # Lire les données du fichier
 data = read_data_from_file('sondage.txt')
 
@@ -47,13 +47,14 @@ table_contingence= pd.DataFrame(contingency_table, index=row_labels, columns=col
 
 print(table_contingence)
 
+"""
 # Table de contingence donnée
 table_contingence = pd.DataFrame({
-    'acide': [8, 2, 0],
-    'amer': [4, 6, 0],
-    'sucré': [0,0,10]
-}, index=['percu acide','percu amer','percu sucré'])
-"""
+    'percu acide': [10, 0, 0],
+    'percu amer': [0, 10, 0],
+    'percu sucré': [0,0,10]
+}, index=['acide','amer','sucré'])
+
 
 
 # Calcul de la matrice des profils FF

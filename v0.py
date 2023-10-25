@@ -2,15 +2,15 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
+"""
 def read_data_from_file(file_name):
-    """Lire les données du fichier."""
+    #Lire les données du fichier
     with open(file_name, 'r') as file:
         lines = file.readlines()[1:]
         return [line.strip().split(', ') for line in lines]
 
 def create_contingency_table(data):
-    """Créer la table de contingence."""
+    #Créer la table de contingence.
     unique_values_1 = sorted(list(set([pair[0] for pair in data])))
     unique_values_2 = sorted(list(set([pair[1] for pair in data])))
 
@@ -22,7 +22,6 @@ def create_contingency_table(data):
 
     return table, unique_values_1, unique_values_2
 
-"""
 # Lire le fichier Excel
 excel_data = pd.read_excel('TP_AFC_majeur1718_travail (1).xlsx')
 
@@ -50,9 +49,9 @@ print(table_contingence)
 """
 # Table de contingence donnée
 table_contingence = pd.DataFrame({
-    'percu acide': [10, 0, 0],
-    'percu amer': [0, 10, 0],
-    'percu sucré': [0,0,10]
+    'percu acide': [9, 3, 0],
+    'percu amer': [1, 7, 0],
+    'percu sucré': [0,0, 10]
 }, index=['acide','amer','sucré'])
 
 
@@ -83,9 +82,12 @@ A_at = np.dot(Fprim, np.dot(D_n_1, F))
 # Calcul de A : matrice d'inertie transformée
 A = np.dot(np.diag(f_j**(-1/2)), np.dot(A_at, np.diag(f_j**(-1/2))))
 
+#calcul de S
+S= np.dot(Fprim,np.dot(D_n_1,np.dot(F,D_p_1)))
+
 # Calcul des valeurs propres et décomposition en valeurs singulières de A
 valeurs_propres, vecteurs_propres = np.linalg.eig(A)
-print(valeurs_propres)
+
 # Trier les valeurs propres et obtenir les indices pour les deux plus grandes
 indices = np.argsort(valeurs_propres)[::-1][:2]
 
@@ -94,8 +96,8 @@ valeurs_propres_uniques = np.unique(valeurs_propres)
 indices_uniques = np.argsort(valeurs_propres_uniques)[::-1]
 
 # Obtenir les indices pour les deux plus grandes valeurs propres distinctes
-#indices = indices_uniques[:2]
-
+indices = indices_uniques[:2]
+indices = [1, 0]
 # Sélection des deux plus grandes valeurs propres et des vecteurs propres associés
 plus_grandes_valeurs = valeurs_propres[indices]
 plus_grands_vecteurs = np.array([vecteurs_propres[indices[0]],vecteurs_propres[indices[1]]])
@@ -109,11 +111,12 @@ plus_grands_vecteurs_T = np.array([vecteurs_propres_T[indices_T[0]],vecteurs_pro
 
 # Calcul des vecteurs propres de S et T
 u = np.dot(np.diag(f_j**(1/2)), plus_grands_vecteurs.T).T
-v = plus_grands_vecteurs_T
-#v = np.zeros((2, F.shape[0]))
-#for alpha in range(2):
-#    lambda_alpha = plus_grandes_valeurs[alpha]
-#    v[alpha] = (1 / np.sqrt(lambda_alpha)) * np.dot(F, np.dot(D_p_1, u[alpha]))
+
+#v = plus_grands_vecteurs_T
+v = np.zeros((2, F.shape[0]))
+for alpha in range(2):
+    lambda_alpha = plus_grandes_valeurs[alpha]
+    v[alpha] = (1 / np.sqrt(lambda_alpha)) * np.dot(F, np.dot(D_p_1, u[alpha]))
 
 
 # Calcul des coordonnées factorielles pour le profil des lignes et le profil des colonnes
@@ -127,9 +130,12 @@ for alpha in range(2):
     phi[alpha] = np.sqrt(lambda_alpha) *np.dot(D_p_1, u[alpha])  
     psitest[alpha] = np.dot(D_n_1, np.dot(F,np.dot(D_p_1,u[alpha])))
     phitest[alpha] = np.dot(D_p_1, np.dot(F.T,np.dot(D_n_1,v[alpha])))
+print(phi-phitest)
+print("-------")
+print(psi-psitest)
 
 phi=phitest
-psi=psi
+psi=psitest
 # Tracer les résultats avec les coordonnées factorielles
 fig, ax = plt.subplots(figsize=(10, 8))
 

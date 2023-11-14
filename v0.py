@@ -1,8 +1,9 @@
 # Exécution du code initial pour préparer les données et les matrices nécessaires
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-"""
+
 def read_data_from_file(file_name):
     #Lire les données du fichier
     with open(file_name, 'r') as file:
@@ -26,7 +27,7 @@ def create_contingency_table(data):
 excel_data = pd.read_excel('TP_AFC_majeur1718_travail (1).xlsx')
 
 # Extraire les colonnes " temps travail" et "Qualite vie" avec les noms corrects
-extracted_data_excel = excel_data[[" temps travail", "Qualite vie"]].dropna().values.tolist()
+extracted_data_excel = excel_data[["Fonction", "Qualite vie"]].dropna().values.tolist()
 
 # Créer la table de contingence pour " temps travail" et "Qualite vie"
 contingency_table_excel, row_labels_excel, column_labels_excel = create_contingency_table(extracted_data_excel)
@@ -34,7 +35,7 @@ contingency_table_excel, row_labels_excel, column_labels_excel = create_continge
 # Convertir la table de contingence en DataFrame pour une meilleure visualisation
 table_contingence = pd.DataFrame(contingency_table_excel, index=row_labels_excel, columns=column_labels_excel)
 
-
+"""
 # Lire les données du fichier
 data = read_data_from_file('sondage.txt')
 
@@ -45,20 +46,20 @@ contingency_table, row_labels, column_labels = create_contingency_table(data)
 table_contingence= pd.DataFrame(contingency_table, index=row_labels, columns=column_labels)
 
 print(table_contingence)
-
+"""
 """
 # Table de contingence donnée
 table_contingence = pd.DataFrame({
-    'percu acide': [9, 3, 0],
-    'percu amer': [1, 7, 0],
+    'percu acide': [10, 0, 0],
+    'percu amer': [0, 10, 0],
     'percu sucré': [0,0, 10]
 }, index=['acide','amer','sucré'])
-
+"""
 
 # Calcul de la matrice des profils FF
 total = table_contingence.values.sum()
 F = table_contingence / total
-
+print(F)
 # Calcul de D_n : matrice diagonale des fréquences marginales des lignes
 f_i = F.sum(axis=1)
 D_n = np.diag(f_i)
@@ -84,7 +85,7 @@ A = np.dot(np.diag(f_j**(-1/2)), np.dot(A_at, np.diag(f_j**(-1/2))))
 
 #calcul de S
 S= np.dot(Fprim,np.dot(D_n_1,np.dot(F,D_p_1)))
-
+print("S",S)
 # Calcul des valeurs propres et décomposition en valeurs singulières de A
 valeurs_propres, vecteurs_propres = np.linalg.eig(A)
 
